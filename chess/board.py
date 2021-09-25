@@ -29,6 +29,39 @@ class Board(object):
             )
 
     ########################################################################
+    #                             Piece masks                              #
+    ########################################################################
+
+    def piece_mask(self, color=None):
+        """Returns mask of board where pieces are of given color.
+
+            Parameters
+            ----------
+            color : Color, optional
+                Color for which to return mask. If None is given, return mask
+                for both BLACK and WHITE.
+
+            Returns
+            -------
+            mask : np.array of shape=(n_ranks, n_files)
+                Boolean mask that is True if a cell contains a piece of given
+                color.
+            """
+        # Get mask for specific colors
+        if color is not None:
+            return np.vectorize(
+                lambda x: x is not None and
+                x.color == color
+            )(self.board)
+
+        # Get mask for both BLACK and WHITE
+        else:
+            return np.logical_or(
+                self.piece_mask(pieces.Color.WHITE),
+                self.piece_mask(pieces.Color.BLACK),
+            )
+
+    ########################################################################
     #                             I/O methods                              #
     ########################################################################
 
@@ -123,5 +156,8 @@ class Board(object):
         return result
 
 if __name__ == "__main__":
+
     board = Board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     print(board)
+
+    print(board.moves(7, 1))

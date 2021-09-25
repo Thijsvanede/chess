@@ -1,4 +1,4 @@
-from .base import Piece, Color
+from .base import Piece, Color, PieceRepresentation
 import numpy as np
 
 class Pawn(Piece):
@@ -8,7 +8,7 @@ class Pawn(Piece):
         # Initialise bishop with correct symbol
         super().__init__(
             color,
-            symbol = "♙",
+            symbol = PieceRepresentation.PAWN,
             *args,
             **kwargs,
         )

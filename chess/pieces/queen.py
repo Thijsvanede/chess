@@ -1,4 +1,4 @@
-from .base import Piece
+from .base import Piece, PieceRepresentation
 import numpy as np
 
 class Queen(Piece):
@@ -8,7 +8,7 @@ class Queen(Piece):
         # Initialise bishop with correct symbol
         super().__init__(
             color,
-            symbol = "♕",
+            symbol = PieceRepresentation.QUEEN,
             *args,
             **kwargs,
         )

@@ -4,6 +4,23 @@ class Color(Enum):
     WHITE = 'w'
     BLACK = 'b'
 
+class PieceRepresentation(Enum):
+    # Regular piece representations
+    BISHOP = 'B'
+    KING   = 'K'
+    KNIGHT = 'N'
+    PAWN   = 'P'
+    QUEEN  = 'Q'
+    ROOK   = 'R'
+
+    # Fancy printable characters
+    UNICODE_BISHOP = '♗'
+    UNICODE_KING   = '♔'
+    UNICODE_KNIGHT = '♘'
+    UNICODE_PAWN   = '♙'
+    UNICODE_QUEEN  = '♕'
+    UNICODE_ROOK   = '♖'
+
 class Piece(object):
 
     def __init__(self, color, symbol, n_files=8, n_ranks=8):
@@ -46,12 +63,15 @@ class Piece(object):
         """Return string representation of piece"""
         # Return regular symbol
         if self.color == Color.BLACK:
-            return self.symbol
+            return self.symbol.value.lower()
+
+            # return self.symbol
 
         # Cast to black version of symbol
         else:
-            bytes   = self.symbol.encode('utf-8')
-            number  = int.from_bytes(bytes, byteorder='big')
-            number += 6 # Cast to black version of piece
-            bytes   = number.to_bytes(3, byteorder='big')
-            return bytes.decode('utf-8')
+            return self.symbol.value.upper()
+            # bytes   = self.symbol.encode('utf-8')
+            # number  = int.from_bytes(bytes, byteorder='big')
+            # number += 6 # Cast to black version of piece
+            # bytes   = number.to_bytes(3, byteorder='big')
+            # return bytes.decode('utf-8')
