@@ -17,7 +17,7 @@ class Rook(Piece):
     #                                Moves                                 #
     ########################################################################
 
-    def moves(self, rank, file, *args, **kwargs):
+    def moves(self, rank, file, mask_black=None, mask_white=None, *args, **kwargs):
         """Return the possible moves for a piece on a given rank and file.
 
             Parameters
@@ -28,6 +28,12 @@ class Rook(Piece):
             file : int
                 File of piece.
 
+            mask_black : np.array of shape=(n_ranks, n_files), optional
+                Optional mask indicating location of black pieces on board.
+
+            mask_white : np.array of shape=(n_ranks, n_files), optional
+                Optional mask indicating location of white pieces on board.
+
             Returns
             -------
             moves : np.array of shape=(n_ranks, n_files)
@@ -36,9 +42,19 @@ class Rook(Piece):
         # Initialise result
         result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
 
-        # Set complete file and rank as possible moves
-        result[rank, :] = True
-        result[:, file] = True
+        # Set file as possible moves
+        result[rank, :] = self.capture_mask(
+            index = file,
+            black = mask_black[rank, :],
+            white = mask_white[rank, :],
+        )
+
+        # Set rank as possible moves
+        result[:, file] = self.capture_mask(
+            index = rank,
+            black = mask_black[:, file],
+            white = mask_white[:, file],
+        )
 
         # Remove own rank and file as moves
         result[rank, file] = False

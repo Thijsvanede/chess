@@ -1,4 +1,5 @@
 from enum import Enum
+import numpy as np
 
 class Color(Enum):
     WHITE = 'w'
@@ -37,7 +38,7 @@ class Piece(object):
         self.n_ranks = n_ranks
 
 
-    def moves(self, rank, file):
+    def moves(self, rank, file, mask_black=None, mask_white=None):
         """Return the possible moves for a piece on a given rank and file.
 
             Parameters
@@ -48,12 +49,55 @@ class Piece(object):
             file : int
                 File of piece.
 
+            mask_black : np.array of shape=(n_ranks, n_files), optional
+                Optional mask indicating location of black pieces on board.
+
+            mask_white : np.array of shape=(n_ranks, n_files), optional
+                Optional mask indicating location of white pieces on board.
+
             Returns
             -------
             moves : np.array of shape=(n_ranks, n_files)
                 Mask of available moves on board.
             """
         raise NotImplementedError("Moves should be implemented by subclasses.")
+
+    ########################################################################
+    #                       Auxiliary move functions                       #
+    ########################################################################
+
+    def capture_mask(self, index, black, white):
+        # Perform check
+        assert black.shape == white.shape, "Black and white should be of same shape."
+
+        # Initialise result
+        result = np.zeros(black.shape, dtype=bool)
+
+        # Initialise same and different color masks
+        same      = white if self.color == Color.WHITE else black
+        different = black if self.color == Color.WHITE else white
+
+        # Fill result
+        for i in range(index+1, black.shape[0]):
+            if same[i]:
+                break
+            elif different[i]:
+                result[i] = True
+                break
+            else:
+                result[i] = True
+
+        for i in range(index-1, -1, -1):
+            if same[i]:
+                break
+            elif different[i]:
+                result[i] = True
+                break
+            else:
+                result[i] = True
+
+        # Return result
+        return result
 
     ########################################################################
     #                            String method                             #

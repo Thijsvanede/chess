@@ -17,7 +17,7 @@ class Bishop(Piece):
     #                                Moves                                 #
     ########################################################################
 
-    def moves(self, rank, file, *args, **kwargs):
+    def moves(self, rank, file, mask_black=None, mask_white=None, *args, **kwargs):
         """Return the possible moves for a piece on a given rank and file.
 
             Parameters
@@ -28,6 +28,12 @@ class Bishop(Piece):
             file : int
                 File of piece.
 
+            mask_black : np.array of shape=(n_ranks, n_files), optional
+                Optional mask indicating location of black pieces on board.
+
+            mask_white : np.array of shape=(n_ranks, n_files), optional
+                Optional mask indicating location of white pieces on board.
+
             Returns
             -------
             moves : np.array of shape=(n_ranks, n_files)
@@ -36,16 +42,19 @@ class Bishop(Piece):
         # Initialise result
         result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
 
-        # Set diagonals as possible moves
-        diagonal_lr = np.eye(self.n_files, self.n_ranks, file-rank, dtype=bool)
-        diagonal_rl = np.flip(np.eye(
-            self.n_files,
-            self.n_ranks,
-            self.n_ranks-1 - rank - file,
-            dtype=bool
-        ), axis=1)
-        result = np.logical_or(result, diagonal_lr)
-        result = np.logical_or(result, diagonal_rl)
+        # Set black side -> white side diagonal as possible moves
+        result = np.logical_or(result, np.diag(self.capture_mask(
+            index = min(rank, file),
+            black = np.diag(mask_black, file-rank),
+            white = np.diag(mask_white, file-rank),
+        ), file-rank))
+
+        # Set white side -> black side diagonal as possible moves
+        result = np.logical_or(result, np.flip(np.diag(self.capture_mask(
+            index = min(rank, self.n_files - file - 1),
+            black = np.diag(np.flip(mask_black, axis=1), self.n_ranks-1 - rank - file),
+            white = np.diag(np.flip(mask_white, axis=1), self.n_ranks-1 - rank - file),
+        ), self.n_ranks-1 - rank - file), axis=1))
 
         # Remove own rank and file as moves
         result[rank, file] = False

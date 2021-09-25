@@ -23,9 +23,11 @@ class Board(object):
         else:
             # Return moves for piece
             return self.board[rank, file].moves(
-                rank = rank,
-                file = file,
-                castling = self.castling,
+                rank       = rank,
+                file       = file,
+                # castling   = self.castling,
+                mask_black = self.piece_mask(color=pieces.Color.BLACK),
+                mask_white = self.piece_mask(color=pieces.Color.WHITE),
             )
 
     ########################################################################
@@ -134,6 +136,9 @@ class Board(object):
 
     def __str__(self):
         """"""
+        return self.string()
+
+    def string(self, moves=None):
         # Setup board top
         result  = "╔" + "═══╤"*(self.n_files-1) + "═══╗\n"
 
@@ -142,7 +147,18 @@ class Board(object):
             result += "║"
 
             for index_file, square in enumerate(row):
-                result += "{:^3}".format(str(square) if square else ' ')
+                if square:
+                    square = str(square)
+                else:
+                    square = ''
+
+                if moves is not None and moves[index_rank, index_file]:
+                    if square:
+                        square = '[' + square + ']'
+                    else:
+                        square = '.'
+
+                result += "{:^3}".format(square)
 
                 if index_file == self.n_files-1 and index_rank != self.n_ranks-1:
                     result += "║\n╟" + "───┼"*(self.n_files-1) + "───╢\n"
@@ -157,7 +173,17 @@ class Board(object):
 
 if __name__ == "__main__":
 
-    board = Board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    print(board)
+    board = Board.from_fen("rnbqkbnr/pppppppp/8/6Q1/8/4n1p1/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    board = Board.from_fen("2krq2r/ppp1q2p/5pQ1/3p2p1/3Qn1b1/2NB1PB1/PPP3PP/R4RK1 w Qk - 0 1")
 
-    print(board.moves(7, 1))
+    from time import time
+    start = time()
+    for rank in range(8):
+        for file in range(8):
+            if board.board[rank, file] is not None:
+                moves = board.moves(rank, file)
+                # print(board.string(
+                #     moves = board.moves(rank, file)
+                # ))
+
+    print(time() - start)
