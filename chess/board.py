@@ -157,7 +157,7 @@ class Board(object):
 
 if __name__ == "__main__":
 
-    board = Board.from_fen("rnbqkbnr/pppppppp/8/7Q/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    board = Board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     print(board)
 
     print(board.moves(7, 1))
