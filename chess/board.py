@@ -173,17 +173,23 @@ class Board(object):
 
 if __name__ == "__main__":
 
-    board = Board.from_fen("rnbqkbnr/pppppppp/8/6Q1/8/4n1p1/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    board_2 = Board.from_fen("rnbqkbnr/pppppppp/8/6Q1/8/4n1p1/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     board = Board.from_fen("2krq2r/ppp1q2p/5pQ1/3p2p1/3Qn1b1/2NB1PB1/PPP3PP/R4RK1 w Qk - 0 1")
+
+    from utils import print_boards_grid
 
     from time import time
     start = time()
-    for rank in range(8):
-        for file in range(8):
-            if board.board[rank, file] is not None:
-                moves = board.moves(rank, file)
-                # print(board.string(
-                #     moves = board.moves(rank, file)
-                # ))
+    boards = list()
+    for i in range(1000):
+        for rank in range(8):
+            for file in range(8):
+                if board.board[rank, file] is not None:
+                    moves = board.moves(rank, file)
+                    # boards.append(board.string(
+                    #     moves = board.moves(rank, file)
+                    # ))
+
+    # print_boards_grid(boards, width=3)
 
     print(time() - start)
