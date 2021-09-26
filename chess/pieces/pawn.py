@@ -17,7 +17,7 @@ class Pawn(Piece):
     #                                Moves                                 #
     ########################################################################
 
-    def moves(self, rank, file, mask_black=None, mask_white=None, *args, **kwargs):
+    def moves(self, rank, file, mask_black=None, mask_white=None, en_passant=None *args, **kwargs):
         """Return the possible moves for a piece on a given rank and file.
 
             Parameters
@@ -34,16 +34,18 @@ class Pawn(Piece):
             mask_white : np.array of shape=(n_ranks, n_files), optional
                 Optional mask indicating location of white pieces on board.
 
+            en_passant : (rank, file), optional
+
             Returns
             -------
             moves : np.array of shape=(n_ranks, n_files)
                 Mask of available moves on board.
             """
         # Initialise result
-        result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        result = np.zeros((self.n_ranks, self.n_files), dtype=bool)
 
         # Get mask of other pieces
-        other_pieces = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        other_pieces = np.zeros((self.n_ranks, self.n_files), dtype=bool)
         if mask_black is not None:
             other_pieces = np.logical_or(other_pieces, mask_black)
         if mask_white is not None:

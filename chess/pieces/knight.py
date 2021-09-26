@@ -40,7 +40,7 @@ class Knight(Piece):
                 Mask of available moves on board.
             """
         # Initialise result
-        result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        result = np.zeros((self.n_ranks, self.n_files), dtype=bool)
 
         # Set squares surrounding knight to True
         result[

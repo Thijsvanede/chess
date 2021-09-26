@@ -43,10 +43,10 @@ class King(Piece):
                 Mask of available moves on board.
             """
         # Initialise result
-        result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        result = np.zeros((self.n_ranks, self.n_files), dtype=bool)
 
         # Get mask of other pieces
-        other_pieces = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        other_pieces = np.zeros((self.n_ranks, self.n_files), dtype=bool)
         if mask_black is not None:
             other_pieces = np.logical_or(other_pieces, mask_black)
         if mask_white is not None:

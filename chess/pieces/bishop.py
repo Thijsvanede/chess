@@ -40,7 +40,7 @@ class Bishop(Piece):
                 Mask of available moves on board.
             """
         # Initialise result
-        result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        result = np.zeros((self.n_ranks, self.n_files), dtype=bool)
 
         # Set black side -> white side diagonal as possible moves
         result = np.logical_or(result, np.diag(self.capture_mask(

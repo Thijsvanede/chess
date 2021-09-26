@@ -40,7 +40,7 @@ class Rook(Piece):
                 Mask of available moves on board.
             """
         # Initialise result
-        result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        result = np.zeros((self.n_ranks, self.n_files), dtype=bool)
 
         # Set file as possible moves
         result[rank, :] = self.capture_mask(
