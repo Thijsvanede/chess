@@ -17,7 +17,7 @@ class Pawn(Piece):
     #                                Moves                                 #
     ########################################################################
 
-    def moves(self, rank, file, mask_black=None, mask_white=None, en_passant=None *args, **kwargs):
+    def moves(self, rank, file, mask_black=None, mask_white=None, en_passant=None, *args, **kwargs):
         """Return the possible moves for a piece on a given rank and file.
 
             Parameters
@@ -69,6 +69,10 @@ class Pawn(Piece):
                 if file < self.n_files-1 and mask_black[rank-1, file+1]:
                     result[rank-1, file+1] = True
 
+            # Add en passant moves
+            if en_passant and en_passant[0] - rank == -1 and abs(en_passant[1] - file) == 1:
+                result[en_passant[0], en_passant[1]] = True
+
         # Set moves for black
         else:
             # Check if blocked
@@ -86,6 +90,10 @@ class Pawn(Piece):
                     result[rank+1, file-1] = True
                 if file < self.n_files-1 and mask_white[rank+1, file+1]:
                     result[rank+1, file+1] = True
+
+            # Add en passant moves
+            if en_passant and  en_passant[0] - rank == 1 and abs(en_passant[1] - file) == 1:
+                result[en_passant[0], en_passant[1]] = True
 
         # Return result
         return result

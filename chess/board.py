@@ -5,11 +5,27 @@ class Board(object):
 
     def __init__(self, n_ranks=8, n_files=8):
         """"""
-        self.n_files   = n_files
-        self.n_ranks   = n_ranks
-        self.board     = np.zeros((n_ranks, n_files), dtype=object)
-        self.color     = 'w'
-        self.castling = 'KQkq'
+        self.n_files    = n_files
+        self.n_ranks    = n_ranks
+        self.board      = np.zeros((n_ranks, n_files), dtype=object)
+        self.color      = 'w'
+        self.castling   = 'KQkq'
+        self.en_passant = '-'
+
+    ########################################################################
+    #                              Get square                              #
+    ########################################################################
+
+    def square2internal(self, square):
+        """Returns internal representation for square."""
+        if square == '-':
+            return None
+        else:
+            return self.n_ranks - int(square[1]), ord(square[0].lower()) - ord('a')
+
+    def internal2square(self, rank, file):
+        """Returns string representation of square."""
+        return chr(file + ord('a')) + str(self.n_ranks - rank)
 
     ########################################################################
     #                              Get moves                               #
@@ -26,6 +42,7 @@ class Board(object):
                 rank       = rank,
                 file       = file,
                 castling   = self.castling,
+                en_passant = self.square2internal(self.en_passant),
                 mask_black = self.piece_mask(color=pieces.Color.BLACK),
                 mask_white = self.piece_mask(color=pieces.Color.WHITE),
             )
@@ -121,7 +138,7 @@ class Board(object):
         board.board      = setup
         board.color      = color
         board.castling   = castling
-        board.en_passant = None if en_passant == '-' else en_passant
+        board.en_passant = en_passant
         board.halfmove   = int(halfmove)
         board.fullmove   = int(fullmove)
 
@@ -174,14 +191,10 @@ class Board(object):
 if __name__ == "__main__":
 
     board_2 = Board.from_fen("rnbqkbnr/pppppppp/8/6Q1/8/4n1p1/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    board = Board.from_fen("rnbqk2r/pp3pp1/2p2P2/3p2p1/1bP5/2N2N2/PPQ1PPPP/R3KB1R b KQkq - 1 8")
+    board = Board.from_fen("rnbqk2r/p4pp1/2p2n2/1pPpp1B1/1b1P2Pp/P1N2N1P/1P2PP2/R2QKB1R b KQkq g3 0 9")
 
     print(board.string(
-        moves = board.moves(0, 4)
-    ))
-
-    print(board.string(
-        moves = board.moves(7, 4)
+        moves = board.moves(4, 7)
     ))
     exit()
 
