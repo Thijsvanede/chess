@@ -45,6 +45,13 @@ class King(Piece):
         # Initialise result
         result = np.zeros((self.n_files, self.n_ranks), dtype=bool)
 
+        # Get mask of other pieces
+        other_pieces = np.zeros((self.n_files, self.n_ranks), dtype=bool)
+        if mask_black is not None:
+            other_pieces = np.logical_or(other_pieces, mask_black)
+        if mask_white is not None:
+            other_pieces = np.logical_or(other_pieces, mask_white)
+
         # Set squares surrounding king to True
         result[
             max(0, rank-1) : rank+2,
@@ -54,16 +61,20 @@ class King(Piece):
         # Add castling moves
         if 'K' in castling and self.color == Color.WHITE:
             assert rank == self.n_ranks-1 and file == 4, "Cannot castle, king has moved!"
-            result[rank, file+2] = True
+            if not other_pieces[rank, file+1]:
+                result[rank, file+2] = True
         if 'Q' in castling and self.color == Color.WHITE:
             assert rank == self.n_ranks-1 and file == 4, "Cannot castle, king has moved!"
-            result[rank, file-2] = True
+            if not other_pieces[rank, file-1]:
+                result[rank, file-2] = True
         if 'k' in castling and self.color == Color.BLACK:
             assert rank == 0 and file == 4, "Cannot castle, king has moved!"
-            result[rank, file+2] = True
+            if not other_pieces[rank, file+1]:
+                result[rank, file+2] = True
         if 'q' in castling and self.color == Color.BLACK:
             assert rank == 0 and file == 4, "Cannot castle, king has moved!"
-            result[rank, file-2] = True
+            if not other_pieces[rank, file-1]:
+                result[rank, file-2] = True
 
         # Ensure king does not capture own pieces
         if mask_white is not None and self.color == Color.WHITE:

@@ -25,7 +25,7 @@ class Board(object):
             return self.board[rank, file].moves(
                 rank       = rank,
                 file       = file,
-                # castling   = self.castling,
+                castling   = self.castling,
                 mask_black = self.piece_mask(color=pieces.Color.BLACK),
                 mask_white = self.piece_mask(color=pieces.Color.WHITE),
             )
@@ -174,7 +174,16 @@ class Board(object):
 if __name__ == "__main__":
 
     board_2 = Board.from_fen("rnbqkbnr/pppppppp/8/6Q1/8/4n1p1/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    board = Board.from_fen("2krq2r/ppp1q2p/5pQ1/3p2p1/3Qn1b1/2NB1PB1/PPP3PP/R4RK1 w Qk - 0 1")
+    board = Board.from_fen("rnbqk2r/pp3pp1/2p2P2/3p2p1/1bP5/2N2N2/PPQ1PPPP/R3KB1R b KQkq - 1 8")
+
+    print(board.string(
+        moves = board.moves(0, 4)
+    ))
+
+    print(board.string(
+        moves = board.moves(7, 4)
+    ))
+    exit()
 
     from utils import print_boards_grid
 
