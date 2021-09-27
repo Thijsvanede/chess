@@ -31,6 +31,22 @@ class Board(object):
     #                              Get moves                               #
     ########################################################################
 
+    def move(self, src_rank, src_file, dst_rank, dst_file):
+        """"""
+        # Check if move is allowed
+        if self.moves(src_rank, src_file)[dst_rank, dst_file]:
+            # TODO - Update other variables
+
+            # Perform move
+            self.board[dst_rank, dst_file] = self.board[src_rank, src_file]
+            self.board[src_rank, src_file] = None
+
+            # Return successful move
+            return True
+
+        # Return unsuccessful move
+        return False
+
     def moves(self, rank, file):
         """"""
         if self.board[rank, file] is None:
