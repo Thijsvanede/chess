@@ -43,6 +43,16 @@ class Board(object):
                 # Capture pawn from en passant
                 self.board[src_rank, dst_file] = None
 
+            # Handle castling rule
+            if self.move_castling(src_rank, src_file, dst_rank, dst_file):
+                # Move the relevant rook
+                if src_file > dst_file:
+                    self.board[src_rank, dst_file+1] = self.board[src_rank, 0]
+                    self.board[src_rank, 0         ] = None
+                else:
+                    self.board[src_rank, dst_file-1    ] = self.board[src_rank, self.n_files-1]
+                    self.board[src_rank, self.n_files-1] = None
+
             # Perform move
             self.board[dst_rank, dst_file] = self.board[src_rank, src_file]
             self.board[src_rank, src_file] = None
@@ -88,6 +98,7 @@ class Board(object):
         # Increment clocks
         self.halfmove += 1
 
+
     def move_en_passant(self, src_rank, src_file, dst_rank, dst_file):
         """Check if the move activated a possible en passant move.
             Returns whether pawn was captured en passant."""
@@ -116,6 +127,28 @@ class Board(object):
 
         # Return whether en passant capture was performed
         return result
+
+
+    def move_castling(self, src_rank, src_file, dst_rank, dst_file):
+        """Check if the move influences castling rights.
+            Returns whether the king castled."""
+        # Check if castled
+        castled = all([
+            isinstance(self.board[src_rank, src_file], pieces.King),
+            abs(src_file - dst_file) == 2,
+        ])
+
+        # Remove castling rights of specific color, if necessary
+        if castled:
+            if self.board[src_rank, src_file] == pieces.Color.WHITE:
+                self.castling = ''.join(x for x in self.castling if x.islower())
+            else:
+                self.castling = ''.join(x for x in self.castling if x.isupper())
+
+        # TODO - implement castling move
+
+        # Return result
+        return castled
 
 
     ########################################################################
