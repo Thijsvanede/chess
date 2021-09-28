@@ -8,9 +8,11 @@ class Board(object):
         self.n_files    = n_files
         self.n_ranks    = n_ranks
         self.board      = np.zeros((n_ranks, n_files), dtype=object)
-        self.color      = 'w'
+        self.color      = pieces.Color.WHITE.value
         self.castling   = 'KQkq'
         self.en_passant = '-'
+        self.halfmove   = 1
+        self.fullmove   = 0
 
     ########################################################################
     #                              Get square                              #
@@ -35,11 +37,18 @@ class Board(object):
         """"""
         # Check if move is allowed
         if self.moves(src_rank, src_file)[dst_rank, dst_file]:
-            # TODO - Update other variables
+
+            # Handle en passant rule
+            if self.move_en_passant(src_rank, src_file, dst_rank, dst_file):
+                # Capture pawn from en passant
+                self.board[src_rank, dst_file] = None
 
             # Perform move
             self.board[dst_rank, dst_file] = self.board[src_rank, src_file]
             self.board[src_rank, src_file] = None
+
+            # Update internals after a move was made
+            self.move_update()
 
             # Return successful move
             return True
@@ -49,7 +58,7 @@ class Board(object):
 
     def moves(self, rank, file):
         """"""
-        if self.board[rank, file] is None:
+        if self.board[rank, file] is None or self.board[rank, file].color.value != self.color:
             # Return no moves
             return np.zeros((self.n_ranks, self.n_files), dtype=bool)
         else:
@@ -62,6 +71,52 @@ class Board(object):
                 mask_black = self.piece_mask(color=pieces.Color.BLACK),
                 mask_white = self.piece_mask(color=pieces.Color.WHITE),
             )
+
+    ########################################################################
+    #                       Auxiliary move functions                       #
+    ########################################################################
+
+    def move_update(self):
+        """Update all internal variables after a successful move."""
+        # Flip active color
+        if self.color == pieces.Color.WHITE.value:
+            self.color = pieces.Color.BLACK.value
+        else:
+            self.color = pieces.Color.WHITE.value
+            self.fullmove += 1
+
+        # Increment clocks
+        self.halfmove += 1
+
+    def move_en_passant(self, src_rank, src_file, dst_rank, dst_file):
+        """Check if the move activated a possible en passant move.
+            Returns whether pawn was captured en passant."""
+        # Check if pawn was captured en passant
+        result = all([
+            self.square2internal(self.en_passant) == (dst_rank, dst_file),
+            isinstance(self.board[src_rank, src_file], pieces.Pawn),
+        ])
+
+        # Check if new en passant is possible
+        if all([
+                isinstance(self.board[src_rank, src_file], pieces.Pawn),
+                abs(src_rank - dst_rank) == 2,
+                src_file == dst_file,
+            ]):
+
+            # Update the en passant square
+            self.en_passant = self.internal2square(
+                (src_rank + dst_rank) // 2,
+                src_file,
+            )
+
+        # Otherwise disable en passant moves
+        else:
+            self.en_passant = '-'
+
+        # Return whether en passant capture was performed
+        return result
+
 
     ########################################################################
     #                             Piece masks                              #
@@ -117,23 +172,23 @@ class Board(object):
             for piece in rank:
                 # Get color from piece
                 if piece.islower():
-                    color = pieces.Color.BLACK
+                    piece_color = pieces.Color.BLACK
                 else:
-                    color = pieces.Color.WHITE
+                    piece_color = pieces.Color.WHITE
 
                 # Set specific piece
                 if piece.lower() == 'p':
-                    setup[-1].append(pieces.Pawn(color))
+                    setup[-1].append(pieces.Pawn(piece_color))
                 elif piece.lower() == 'n':
-                    setup[-1].append(pieces.Knight(color))
+                    setup[-1].append(pieces.Knight(piece_color))
                 elif piece.lower() == 'b':
-                    setup[-1].append(pieces.Bishop(color))
+                    setup[-1].append(pieces.Bishop(piece_color))
                 elif piece.lower() == 'r':
-                    setup[-1].append(pieces.Rook(color))
+                    setup[-1].append(pieces.Rook(piece_color))
                 elif piece.lower() == 'q':
-                    setup[-1].append(pieces.Queen(color))
+                    setup[-1].append(pieces.Queen(piece_color))
                 elif piece.lower() == 'k':
-                    setup[-1].append(pieces.King(color))
+                    setup[-1].append(pieces.King(piece_color))
                 else:
                     for _ in range(int(piece)):
                         setup[-1].append(None)
