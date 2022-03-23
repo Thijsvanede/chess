@@ -110,6 +110,8 @@ class Board(object):
 
             print(f"{self.internal2square(src_rank, src_file)} ({src_rank}, {src_file}) -> {self.internal2square(dst_rank, dst_file)} ({dst_rank}, {dst_file})")
 
+            print(self.is_in_check(self.board[src_rank, src_file].color))
+
             # Handle special cases
             self.handle_en_passant(src_rank, src_file, dst_rank, dst_file)
             self.handle_castling  (src_rank, src_file, dst_rank, dst_file)
@@ -198,6 +200,55 @@ class Board(object):
                 mask_black = self.piece_mask(color=pieces.Color.BLACK),
                 mask_white = self.piece_mask(color=pieces.Color.WHITE),
             )
+
+    ########################################################################
+    #                           Check functions                            #
+    ########################################################################
+
+    def is_in_check(self, color : Optional[pieces.Color] = None) -> bool:
+        """Check wheter a given color is in check.
+
+            Parameters
+            ----------
+            color : Optional[pieces.Color]
+                If given, return whether the given color is in check. If None,
+                return whether any color is in check.
+
+            Returns
+            -------
+            is_in_check : boolean
+                True if given color (or any color if color is None) is in check.
+            """
+        # Get pieces of opposite colour
+        if color == pieces.Color.WHITE:
+            opposite_color = pieces.Color.BLACK
+        elif color == pieces.Color.BLACK:
+            opposite_color = pieces.Color.WHITE
+        else:
+            opposite_color = None
+
+        # Get piece mask
+        mask = self.piece_mask(opposite_color)
+
+        # Get corresponding files and ranks
+        # TODO
+
+        # Loop over all pieces
+        for piece in self.board[self.piece_mask(opposite_color)]:
+            # Get moves for piece
+            moves = piece.moves(
+                rank       = rank,
+                file       = file,
+                castling   = self.castling,
+                en_passant = self.square2internal(self.en_passant),
+                mask_black = self.piece_mask(color=pieces.Color.BLACK),
+                mask_white = self.piece_mask(color=pieces.Color.WHITE),
+            )
+
+            # Check if king capture is in possible moves
+            print(moves)
+
+        raise ValueError("Not yet implemented")
 
     ########################################################################
     #                       Auxiliary move functions                       #
@@ -559,7 +610,7 @@ class Board(object):
             piece = input('Please select a piece to promote to (n/b/r/q): ')
             # Get piece as lowercase
             piece = piece.lower()
-            
+
             # Give feedback if required
             if piece not in possibilities:
                 print("That is not an available choice!")
@@ -571,12 +622,12 @@ class Board(object):
     #                             Piece masks                              #
     ########################################################################
 
-    def piece_mask(self, color=None):
+    def piece_mask(self, color: Optional[pieces.Color] = None) -> np.ndarray:
         """Returns mask of board where pieces are of given color.
 
             Parameters
             ----------
-            color : Color, optional
+            color : Optional[Color]
                 Color for which to return mask. If None is given, return mask
                 for both BLACK and WHITE.
 
