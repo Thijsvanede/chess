@@ -1,5 +1,4 @@
 import os
-import cairosvg
 import io
 import pygame
 
