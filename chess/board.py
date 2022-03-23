@@ -140,7 +140,7 @@ class Board(object):
 
         # Remove castling rights of specific color, if necessary
         if castled:
-            if self.board[src_rank, src_file] == pieces.Color.WHITE:
+            if self.board[src_rank, src_file].color == pieces.Color.WHITE:
                 self.castling = ''.join(x for x in self.castling if x.islower())
             else:
                 self.castling = ''.join(x for x in self.castling if x.isupper())
