@@ -8,7 +8,7 @@ from board import Board
 if __name__ == "__main__":
     # Create new GUI
     gui = GUI(
-        board = Board.from_fen("rnbqkbnr/pppppppp/8/6Q1/8/4n1p1/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        board = Board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     )
 
     # Run GUI
