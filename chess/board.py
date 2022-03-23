@@ -1,10 +1,24 @@
 import numpy as np
 import pieces
+from typing import Optional, Tuple
 
 class Board(object):
 
-    def __init__(self, n_ranks=8, n_files=8):
-        """"""
+    def __init__(
+            self,
+            n_ranks : int = 8,
+            n_files : int = 8,
+        ):
+        """Create a chess board for the given number of files and ranks.
+
+            Parameters
+            ----------
+            n_ranks : int
+                Number of ranks on chess board.
+
+            n_files : int
+                Number of files on chess board.
+            """
         self.n_files    = n_files
         self.n_ranks    = n_ranks
         self.board      = np.zeros((n_ranks, n_files), dtype=object)
@@ -18,44 +32,91 @@ class Board(object):
     #                              Get square                              #
     ########################################################################
 
-    def square2internal(self, square):
-        """Returns internal representation for square."""
+    def square2internal(self, square: str) -> Optional[Tuple[int, int]]:
+        """Returns internal representation for square.
+
+            Parameters
+            ----------
+            square : str
+                String representation of square as {file}{rank}. E.g, e1 is the
+                initial square of the white king.
+
+            Returns
+            -------
+            rank : int
+                Rank of square.
+
+            file : int
+                File of square.
+            """
         if square == '-':
             return None
         else:
             return self.n_ranks - int(square[1]), ord(square[0].lower()) - ord('a')
 
-    def internal2square(self, rank, file):
-        """Returns string representation of square."""
+    def internal2square(self, rank: int, file: int) -> str:
+        """Returns string representation of square.
+
+            Parameters
+            -------
+            rank : int
+                Rank of square.
+
+            file : int
+                File of square.
+
+            Parameters
+            ----------
+            square : str
+                String representation of square as {file}{rank}. E.g, e1 is the
+                initial square of the white king.
+            """
         return chr(file + ord('a')) + str(self.n_ranks - rank)
 
     ########################################################################
     #                              Get moves                               #
     ########################################################################
 
-    def move(self, src_rank, src_file, dst_rank, dst_file):
-        """"""
+    def move(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> bool:
+        """Perform a move by moving the piece from src square to dst square.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+
+            Returns
+            -------
+            success : bool
+                True if move was successful.
+            """
         # Check if move is allowed
-        if self.moves(src_rank, src_file)[dst_rank, dst_file]:
+        if self.get_moves(src_rank, src_file)[dst_rank, dst_file]:
 
-            # Handle en passant rule
-            if self.move_en_passant(src_rank, src_file, dst_rank, dst_file):
-                # Capture pawn from en passant
-                self.board[src_rank, dst_file] = None
+            print(f"{self.internal2square(src_rank, src_file)} ({src_rank}, {src_file}) -> {self.internal2square(dst_rank, dst_file)} ({dst_rank}, {dst_file})")
 
-            # Handle castling rule
-            if self.move_castling(src_rank, src_file, dst_rank, dst_file):
-                # Move the relevant rook
-                if src_file > dst_file:
-                    self.board[src_rank, dst_file+1] = self.board[src_rank, 0]
-                    self.board[src_rank, 0         ] = None
-                else:
-                    self.board[src_rank, dst_file-1    ] = self.board[src_rank, self.n_files-1]
-                    self.board[src_rank, self.n_files-1] = None
+            # Handle special cases
+            self.handle_en_passant(src_rank, src_file, dst_rank, dst_file)
+            self.handle_castling  (src_rank, src_file, dst_rank, dst_file)
+            self.handle_promotion (src_rank, src_file, dst_rank, dst_file)
 
             # Perform move
-            self.board[dst_rank, dst_file] = self.board[src_rank, src_file]
-            self.board[src_rank, src_file] = None
+            self.move_piece(src_rank, src_file, dst_rank, dst_file)
 
             # Update internals after a move was made
             self.move_update()
@@ -66,9 +127,65 @@ class Board(object):
         # Return unsuccessful move
         return False
 
-    def moves(self, rank, file):
-        """"""
-        if self.board[rank, file] is None or self.board[rank, file].color.value != self.color:
+
+    def move_piece(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> None:
+        """Move a piece from a source square to a destination square.
+
+            Note
+            ----
+            Method does not perform any checks of whether the move is possible.
+            Use self.move() to perform all necessary checks.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to."""
+        # Copy piece from source square to destination square
+        self.board[dst_rank, dst_file] = self.board[src_rank, src_file]
+        # Remove piece from source square
+        self.board[src_rank, src_file] = None
+
+
+    def get_moves(
+            self,
+            rank : int,
+            file : int,
+        ) -> np.ndarray:
+        """Get the possible moves for a given square.
+
+            Parameters
+            ----------
+            rank : int
+                Rank of square for which to get moves.
+
+            file : int
+                File of square for which to get moves.
+
+            Returns
+            -------
+            moves : np.array of shape=(self.n_ranks, self.n_files)
+                Boolean array representing the available moves of a piece.
+            """
+        # Case of no piece or incorrect colour:
+        if (
+                self.board[rank, file] is None or
+                self.board[rank, file].color.value != self.color
+            ):
             # Return no moves
             return np.zeros((self.n_ranks, self.n_files), dtype=bool)
         else:
@@ -98,58 +215,357 @@ class Board(object):
         # Increment clocks
         self.halfmove += 1
 
+    ########################################################################
+    #                         En passant functions                         #
+    ########################################################################
 
-    def move_en_passant(self, src_rank, src_file, dst_rank, dst_file):
-        """Check if the move activated a possible en passant move.
-            Returns whether pawn was captured en passant."""
-        # Check if pawn was captured en passant
-        result = all([
-            self.square2internal(self.en_passant) == (dst_rank, dst_file),
-            isinstance(self.board[src_rank, src_file], pieces.Pawn),
-        ])
+    def handle_en_passant(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> None:
+        """Handle moves influencing the en passant rule.
 
-        # Check if new en passant is possible
-        if all([
-                isinstance(self.board[src_rank, src_file], pieces.Pawn),
-                abs(src_rank - dst_rank) == 2,
-                src_file == dst_file,
-            ]):
+            This involves the following actions:
+            1. If a pawn takes en passant, remove the captured pawn from the board.
+            2. If a pawn moves two squares, set the new en passant square.
+            3. If no pawn was moved two squares, clear the en passant square.
 
-            # Update the en passant square
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+            """
+        # Check if move that was made is en passant
+        if self.is_en_passant(src_rank, src_file, dst_rank, dst_file):
+            # Remove the captured en passant pawn
+            self.board[src_rank, dst_file] = None
+
+        # Check if new en passant move is possible
+        if self.is_double_pawn_move(src_rank, src_file, dst_rank, dst_file):
+            # Set new en passant square
             self.en_passant = self.internal2square(
-                (src_rank + dst_rank) // 2,
-                src_file,
+                rank = (src_rank + dst_rank) // 2,
+                file = src_file,
             )
 
-        # Otherwise disable en passant moves
+        # Otherwise, disable en passant moves
         else:
+            # Disable en passant move
             self.en_passant = '-'
 
-        # Return whether en passant capture was performed
-        return result
+    def is_en_passant(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> bool:
+        """Check whether a move is taking en passant.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+
+            Returns
+            -------
+            is_en_passant : bool
+                True if move is taking en passant.
+            """
+        return (
+            # Check whether the capturing piece is a pawn
+            isinstance(self.board[src_rank, src_file], pieces.Pawn) and
+            # Check if the destination square is equal to the en_passant square
+            self.square2internal(self.en_passant) == (dst_rank, dst_file)
+        )
 
 
-    def move_castling(self, src_rank, src_file, dst_rank, dst_file):
-        """Check if the move influences castling rights.
-            Returns whether the king castled."""
+    def is_double_pawn_move(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> bool:
+        """Check whether a move is a pawn moving forward two squares.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+
+            Returns
+            -------
+            is_double_pawn_move : bool
+                True if move is a double pawn move.
+            """
+        return (
+            # Check whether the moving piece is a pawn
+            isinstance(self.board[src_rank, src_file], pieces.Pawn) and
+            # Check whether the pawn moved two pieces
+            abs(src_rank - dst_rank) == 2
+        )
+
+    ########################################################################
+    #                          Castling functions                          #
+    ########################################################################
+
+    def handle_castling(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> None:
+        """Handle moves influencing the castling rule.
+
+            This involves the following actions:
+            1. If a king castled, move the corresponding rook.
+            2. If a king moved, remove all castling rights for that colour.
+            3. If a rook moved, remove the castling rights for that rook colour.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+            """
         # Check if castled
-        castled = all([
-            isinstance(self.board[src_rank, src_file], pieces.King),
-            abs(src_file - dst_file) == 2,
-        ])
+        if self.is_castle_move(src_rank, src_file, dst_rank, dst_file):
+            # Move the corresponding rook
+            if src_file > dst_file:
+                self.move_piece(src_rank, 0, dst_rank, dst_file+1)
+            else:
+                self.move_piece(src_rank, self.n_files-1, dst_rank, dst_file-1)
 
-        # Remove castling rights of specific color, if necessary
-        if castled:
+        # Check if the king moved
+        if isinstance(self.board[src_rank, src_file], pieces.King):
+            # Remove castling rights of king colour
             if self.board[src_rank, src_file].color == pieces.Color.WHITE:
                 self.castling = ''.join(x for x in self.castling if x.islower())
             else:
                 self.castling = ''.join(x for x in self.castling if x.isupper())
 
-        # TODO - implement castling move
+        # Check if the rook moved
+        elif isinstance(self.board[src_rank, src_file], pieces.Rook):
+            # Remove castling rights of the rook color and side
+            if self.board[src_rank, src_file].color == pieces.Color.WHITE:
+                # White queen side
+                if src_file == 0:
+                    self.castling = ''.join(x for x in self.castling if x!='Q')
+                # White king side
+                else:
+                    self.castling = ''.join(x for x in self.castling if x!='K')
+            else:
+                # Black queen side
+                if src_file == 0:
+                    self.castling = ''.join(x for x in self.castling if x!='q')
+                # Black king side
+                else:
+                    self.castling = ''.join(x for x in self.castling if x!='k')
 
-        # Return result
-        return castled
 
+    def is_castle_move(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> bool:
+        """Check if a move would be a castling move.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+
+            Returns
+            -------
+            is_castle_move : boolean
+                True if move will castle the king
+            """
+        return (
+            # Check whether moving piece is a king
+            isinstance(self.board[src_rank, src_file], pieces.King) and
+            # Check whether king moves two squares horizontally
+            abs(src_file - dst_file) == 2
+        )
+
+
+    ########################################################################
+    #                         Promotion functions                          #
+    ########################################################################
+
+    def handle_promotion(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> None:
+        """Handle moves involving promotion of a piece.
+
+            This involves the following actions:
+            1. If a pawn reaches the last rank, prompt the user for a piece to
+               promote to.
+            2. If the piece is chosen, replace the pawn by said piece.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+            """
+        # Check if the move promotes a pawn
+        if self.is_promotion(src_rank, src_file, dst_rank, dst_file):
+            # Get possible promotion pieces
+            possibilities = set('nbrq')
+            # Initialise promotion piece
+            piece = None
+
+            # Query user until we receive a correct promotion piece
+            while piece not in possibilities:
+                # Query the user for a piece
+                piece = self.query_promotion()
+
+            # Get color of pawn
+            color = self.board[src_rank, src_file].color
+
+            # Create new piece
+            if piece == 'q':
+                piece = pieces.Queen(color)
+            elif piece == 'r':
+                piece = pieces.Rook(color)
+            elif piece == 'b':
+                piece = pieces.Bishop(color)
+            elif piece == 'n':
+                piece = pieces.Knight(color)
+            else:
+                raise ValueError(
+                    f"Unknown piece {piece}, should be one of {possibilities}"
+                )
+
+            # Transform pawn to piece
+            self.board[src_rank, src_file] = piece
+
+
+    def is_promotion(
+            self,
+            src_rank : int,
+            src_file : int,
+            dst_rank : int,
+            dst_file : int,
+        ) -> bool:
+        """Check if a move is a promotion of a pawn.
+
+            Parameters
+            ----------
+            src_rank : int
+                Rank of source square to move from.
+
+            src_file : int
+                File of source square to move from.
+
+            dst_rank : int
+                Rank of destination square to move to.
+
+            dst_file : int
+                File of destination square to move to.
+
+            Returns
+            -------
+            is_promotion : boolean
+                True if move promotes a pawn.
+            """
+        return (
+            # Check whether moving piece is a pawn
+            isinstance(self.board[src_rank, src_file], pieces.Pawn) and
+            # Check whether the pawn moved to the last rank
+            (dst_rank == 0 or dst_rank == self.n_ranks-1)
+        )
+
+
+    def query_promotion(self) -> str:
+        """Query the user for which piece to promote to.
+
+            Returns
+            -------
+            piece : str ('n'|'b'|'r'|'q')
+                String representation of piece, can be 'n', 'b', 'r', 'q'.
+            """
+        # Get possible promotion pieces
+        possibilities = set('nbrq')
+        # Initialise promotion piece
+        piece = None
+
+        # Query user until we receive a correct promotion piece
+        while piece not in possibilities:
+            # Query the user for a piece
+            piece = input('Please select a piece to promote to (n/b/r/q): ')
+            # Get piece as lowercase
+            piece = piece.lower()
+            
+            # Give feedback if required
+            if piece not in possibilities:
+                print("That is not an available choice!")
+
+        # Return piece
+        return piece
 
     ########################################################################
     #                             Piece masks                              #

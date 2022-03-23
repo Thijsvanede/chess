@@ -216,7 +216,7 @@ class GUI(object):
                 # Check if move is allowed
                 elif self.last_clicked != (None, None):
                     # Get possible moves of last clicked
-                    moves = self.board.moves(*self.last_clicked)
+                    moves = self.board.get_moves(*self.last_clicked)
 
                     # If move is allowed
                     if moves[rank, file]:
@@ -242,4 +242,4 @@ class GUI(object):
                     self.overlay      = None
                 else:
                     self.last_clicked = (rank, file)
-                    self.overlay = self.board.moves(rank, file)
+                    self.overlay = self.board.get_moves(rank, file)
